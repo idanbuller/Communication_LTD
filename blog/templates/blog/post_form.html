@@ -1,0 +1,75 @@
+{% extends "blog/base.html" %} {% load crispy_forms_tags %} {% block content %} <h1>Stored Cross Site Scripting (XSS)</h1>
+<h2>Overview</h2>
+<p> Cross-Site Scripting (XSS) attacks are a type of injection, in which malicious scripts are injected into otherwise benign and trusted websites. XSS attacks occur when an attacker uses a web application to send malicious code, generally in the form of a browser side script, to a different end user. Flaws that allow these attacks to succeed are quite widespread and occur anywhere a web application uses input from a user within the output it generates without validating or encoding it. An attacker can use XSS to send a malicious script to an unsuspecting user. The end user’s browser has no way to know that the script should not be trusted, and will execute the script. Because it thinks the script came from a trusted source, the malicious script can access any cookies, session tokens, or other sensitive information retained by the browser and used with that site. These scripts can even rewrite the content of the HTML page. <br> Stored cross-site scripting (also known as second-order or persistent XSS) arises when an application receives data from an untrusted source and includes that data within its later HTTP responses in an unsafe way. Suppose a website allows users to submit comments on blog posts, which are displayed to other users. Users submit comments using an HTTP request like the following: </p>
+<pre>
+		<code>
+        POST /post/comment HTTP/1.1
+        Host: vulnerable-website.com
+        Content-Length: 100
+        postId=3&comment=This+post+was+extremely+helpful.&name=Carlos+Montoya&email=carlos%40normal-user.net
+    </code>
+	</pre>
+<p> After this comment has been submitted, any user who visits the blog post will receive the following within the application's response: </p>
+<pre>
+		<code>
+        &lt;p>This post was extremely helpful.&lt;/p></code>
+	</pre>
+<p> Assuming the application doesn't perform any other processing of the data, an attacker can submit a malicious comment like this: </p>
+<pre>
+		<code>
+        &lt;script>/* Bad stuff here... */&lt;/script></code>
+	</pre>
+<p> Within the attacker's request, this comment would be URL-encoded as: </p>
+<pre>
+		<code>
+        comment=%3Cscript%3E%2F*%2BBad%2Bstuff%2Bhere...%2B*%2F%3C%2Fscript%3E
+    </code>
+	</pre>
+<p> Any user who visits the blog post will now receive the following within the application's response: </p>
+<pre>
+		<code>
+        &lt;p>&lt;script>/* Bad stuff here... */&lt;/script>&lt;/p></code>
+	</pre>
+<p> The script supplied by the attacker will then execute in the victim user's browser, in the context of their session with the application. </p>
+<h2>What is the impact of a successful stored XSS attacks?</h2>
+<p>If an attacker can control a script that is executed in the victim's browser, then they can typically fully compromise that user. The attacker can carry out any of the actions that are applicable to the impact of reflected XSS vulnerabilities. In terms of exploitability, the key difference between reflected and stored XSS is that a stored XSS vulnerability enables attacks that are self-contained within the application itself. The attacker does not need to find an external way of inducing other users to make a particular request containing their exploit. Rather, the attacker places their exploit into the application itself and simply waits for users to encounter it. The self-contained nature of stored cross-site scripting exploits is particularly relevant in situations where an XSS vulnerability only affects users who are currently logged in to the application. If the XSS is reflected, then the attack must be fortuitously timed: a user who is induced to make the attacker's request at a time when they are not logged in will not be compromised. In contrast, if the XSS is stored, then the user is guaranteed to be logged in at the time they encounter the exploit.</p>
+<p>Now, try it yourself and submit a new deal! <br>
+</p>
+<p>Use the following code: <br>
+  <strong>Title:</strong> &lt;script>alert("XSS")&lt;/script> <br>
+  <strong>Content:</strong> &lt;script>alert("XSS")&lt;/script> <br>
+</p>
+<div class="content-section">
+  <form method="POST"> {% csrf_token %} <fieldset class="form-group">
+      <legend class="border-bottom mb-4">Submit New Deal</legend>
+      {{ form|crispy | safe }}
+    </fieldset>
+    <div class="form-group">
+      <button class="btn btn-outline-info" type="submit">Submit</button>
+    </div>
+  </form>
+</div>
+<br>
+<h2>How To Defend?</h2>
+<h5>After exploiting the <strong>Stored XSS</strong> vulnerability, let's defend it! <br>
+</h5>
+<p> The following is the HTML code running in the background: </p>
+<pre>
+								<code>
+        &lt;div class="content-section">
+        &lt;form method="POST">
+            {% csrf_token %}
+            &lt;fieldset class="form-group">
+                &lt;legend class="border-bottom mb-4">Submit New Deal&lt;/legend>
+                 {{form|crispy | safe}
+            &lt;/fieldset>
+            &lt;div class="form-group">
+                &lt;button class="btn btn-outline-info" type="submit">Submit&lt;/button>
+            &lt;/div>
+        &lt;/form>
+    &lt;/div></code>
+							</pre>
+<p> When adding "safe" to the form, we basically telling Django to accept every letter that the user has submitted without applying any defence mechanisms. In order to fix it, just remove the "| safe". </p>
+<br>
+<br>
+{% endblock content %}

@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'blog/home.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'blog/sidebar.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'blog/about.css' %}">
+    <!-- CSS styles -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.3.2/build/styles/rainbow.min.css">
+    <!-- Javascript -->
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.3.2/build/highlight.min.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script> {% if title %} <title>Communication LTD - {{ title }}</title> {% else %} <title>Communication LTD Packages</title> {% endif %}
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <a href="{% url 'blog-home' %}">
+          <img src="{% static 'imgs/CodeWeblogo.png'%}" width="50" height="50">
+          <a class="navbar-brand mr-4" href="{% url 'blog-home' %}">Communication LTD</a>
+        </a>
+        <div class="container">
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{% url 'blog-home' %}">Home</a>
+              <a class="nav-item nav-link" href="{% url 'blog-about' %}">About</a>
+              <a class="nav-item nav-link" href="{% url 'post-create' %}">Subscribe for New Deal (Stored XSS)</a>
+              <a class="nav-item nav-link" href="{% url 'blog-SQLi' %}">Login Page (SQL Injection)</a>
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav"> {% if user.is_authenticated %} <a class="nav-item nav-link" href="{% url 'blog-posts' %}">Deals</a>
+<a class="nav-item nav-link" href="{% url 'profile' %}">Profile</a>
+              <a class="nav-item nav-link" href="{% url 'logout' %}">Logout</a> <a class="nav-item nav-link" >Hello, {{ user.username }}</a> {% else %} <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
+              <a class="nav-item nav-link" href="{% url 'register' %}">Register</a> {% endif %}
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <main role="main" class="container">
+      <div class="row">
+        <div class="col-md-8"> {% if messages %} {% for message in messages %} <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+          </div> {% endfor %} {% endif %} {% block content %}{% endblock %} </div>
+        <div class="col-md-4">
+          <aside>
+            {% if user.is_authenticated %}
+            <p>Sidebar</p>
+            <a href="http://127.0.0.1:8000/post/new/">
+              <i class="fa fa-user-o" aria-hidden="true"></i> New Deal </a>
+            <a href="http://127.0.0.1:8000/posts/">
+              <i class="fa fa-star-o" aria-hidden="true"></i> Deals </a>
+            <a href="http://127.0.0.1:8000/SQLi/">
+              <i class="fa fa-laptop" aria-hidden="true"></i> Login Page </a>
+            <a href="http://127.0.0.1:8000/profile/">
+              <i class="fa fa-clone" aria-hidden="true"></i> Profile </a>
+            <a href="jhttp://127.0.0.1:8000/logout/">
+              <i class="fa fa-trash-o" aria-hidden="true"></i> Logout </a>
+<!--            <a href="javascript:void(0)">-->
+<!--              <i class="fa fa-trash-o" aria-hidden="true"></i> Vulnerability #6 </a>-->
+<!--            <a href="javascript:void(0)">-->
+<!--              <i class="fa fa-trash-o" aria-hidden="true"></i> Vulnerability #7 </a>-->
+<!--            <a href="javascript:void(0)">-->
+<!--              <i class="fa fa-trash-o" aria-hidden="true"></i> Vulnerability #8 </a>-->
+<!--            <a href="javascript:void(0)">-->
+<!--              <i class="fa fa-trash-o" aria-hidden="true"></i> Vulnerability #9 </a>-->
+<!--            <a href="javascript:void(0)">-->
+<!--              <i class="fa fa-trash-o" aria-hidden="true"></i> Vulnerability #10 </a>-->
+          </aside>
+          {% endif %}
+        </div>
+      </div>
+    </main>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  </body>
+</html>

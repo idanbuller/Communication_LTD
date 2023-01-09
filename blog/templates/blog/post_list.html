@@ -1,0 +1,29 @@
+{%extends "blog/base.html"%}
+{% block content%}
+<div class="content-section">
+    <form method="GET" action="{% url 'blog-search' %}">
+
+
+        <input name="q" value="{{request.GET.q}}" placeholder="search..">
+        <button class=" btn btn-success" type="submit">
+            search
+        </button>
+
+    </form>
+    <div>
+    <ul>
+        <h2>Your query was:
+            <br/>
+            <b>{{query | safe}}</b>
+        </h2>
+
+        {% for element in results %}
+            <div>
+                <h2 class="article-title">{{ element.title | safe }}</h2>
+                <p class="article-content">{{ element.content | safe }}</p>
+            </div>
+        {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock content%}

@@ -1,0 +1,139 @@
+{% extends "blog/base.html" %} {% block content %} <h1>SQL Injection</h1>
+<h2>Overview</h2>
+<p> A SQL injection attack consists of insertion or “injection” of a SQL query via the input data from the client to the application. A successful SQL injection exploit can read sensitive data from the database, modify database data (Insert/Update/Delete), execute administration operations on the database (such as shutdown the DBMS), recover the content of a given file present on the DBMS file system and in some cases issue commands to the operating system. SQL injection attacks are a type of injection attack, in which SQL commands are injected into data-plane input in order to affect the execution of predefined SQL commands. </p>
+<p>In this section, we'll explain what SQL injection (SQLi) is, describe some common examples, explain how to find and exploit various kinds of SQL injection vulnerabilities, and summarize how to prevent SQL injection. </p>
+<h2>What is the impact of a successful SQL injection attack?</h2>
+<p>A successful SQL injection attack can result in unauthorized access to sensitive data, such as passwords, credit card details, or personal user information. Many high-profile data breaches in recent years have been the result of SQL injection attacks, leading to reputational damage and regulatory fines. In some cases, an attacker can obtain a persistent backdoor into an organization's systems, leading to a long-term compromise that can go unnoticed for an extended period. </p>
+<h2>Retrieving hidden data</h2>
+<p>Consider a shopping application that displays products in different categories. When the user clicks on the Gifts category, their browser requests the URL: </p>
+<pre>
+	<code>
+        https://insecure-website.com/products?category=Gifts
+    </code>
+</pre>
+<p> This causes the application to make an SQL query to retrieve details of the relevant products from the database: </p>
+<pre>
+	<code>
+        SELECT * FROM products WHERE category = 'Gifts' AND released = 1
+    </code>
+</pre>
+<p> The restriction released = 1 is being used to hide products that are not released. For unreleased products, presumably released = 0. The application doesn't implement any defenses against SQL injection attacks, so an attacker can construct an attack like: </p>
+<pre>
+	<code>
+        https://insecure-website.com/products?category=Gifts'--
+    </code>
+</pre>
+<p> This results in the SQL query: </p>
+<pre>
+	<code>
+        SELECT * FROM products WHERE category = 'Gifts'--' AND released = 1
+    </code>
+</pre>
+<p> The key thing here is that the double-dash sequence -- is a comment indicator in SQL, and means that the rest of the query is interpreted as a comment. This effectively removes the remainder of the query, so it no longer includes AND released = 1. This means that all products are displayed, including unreleased products. Going further, an attacker can cause the application to display all the products in any category, including categories that they don't know about: </p>
+<pre>
+	<code>
+        https://insecure-website.com/products?category=Gifts'+OR+1=1--
+    </code>
+</pre>
+<p> This results in the SQL query: </p>
+<pre>
+	<code>
+        SELECT * FROM products WHERE category = 'Gifts' OR 1=1--' AND released = 1
+    </code>
+</pre>
+<p>The modified query will return all items where either the category is Gifts, or 1 is equal to 1. Since 1=1 is always true, the query will return all items. </p>
+<p>Now, try it yourself and Log In! <br>
+</p>
+<p>Use the following code: <br>
+  <strong>Username:</strong> test' OR 1=1 -- <br>
+   In the password field you can enter any password you want.
+
+</p>
+<div class="content-section">
+  <form method="POST"> {% csrf_token %} <fieldset class="form-group">
+      <legend class="border-bottom mb-4">Log In</legend>
+      <label for="username">Username:</label>
+      <input type="text" name="username" required>
+      <br>
+      <label for="password">Password:</label>
+      <input type="password" name="password" required>
+      <br>
+    </fieldset>
+    <div class="form-group">
+      <button class="btn btn-outline-info" type="submit">Login</button>
+      <small class="text-muted ml-2">
+        <a href="{% url 'password_reset' %}">Forgot Password?</a>
+      </small>
+    </div>
+  </form> {% if error %} <p>{{ error }}</p> {% endif %} <div class="border-top pt-3">
+    <small class="text-muted"> Need An Account? <a class="ml-2" href="{% url 'register' %}">Sign Up Now</a>
+    </small>
+  </div>
+</div>
+<br>
+<h2>What Happens In The Background?</h2>
+<p>The following function configure the login route to be manual and not Django's default. <br>
+</p>
+<pre>
+											<code>
+def SQLi(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = None
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM auth_user WHERE username = '" + username + "'"
+            )
+            row = cursor.fetchone()
+            if row:
+                # Check the password
+                print(row)
+                hashed_password = row[1]
+                if check_password(password, hashed_password):
+                    Return the user object
+                user = User(row[0], row[1], row[2])
+
+        # user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('blog-home')
+        else:
+            return render(request, 'blog/SQLi.html', {'error': 'Invalid login credentials'})
+    else:
+        return render(request, 'blog/SQLi.html')
+    </code>
+										</pre>
+<h2>How To Defend?</h2>
+<h5>After exploiting the <strong>SQL Injection</strong> vulnerability, let's defend it! <br>
+</h5>
+<p>
+    Django’s querysets are protected from SQL injection since their queries are constructed using query parameterization. A query’s SQL code is defined separately from the query’s parameters. Since parameters may be user-provided and therefore unsafe, they are escaped by the underlying database driver.<br><br>
+    Django also gives developers power to write raw queries or execute custom sql. These capabilities should be used sparingly and you should always be careful to properly escape any parameters that the user can control. In addition, you should exercise caution when using extra() and RawSQL.<br><br>
+    In case of login function, Django provides  authenticate() function which query the database using parameterization.<br><br>
+    This is an example for secure login in django:
+    <pre>
+											<code>
+from django.contrib.auth import authenticate
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            # Login the user
+            login(request, user)
+            return redirect('success')
+        else:
+            # Return an 'invalid login' error message
+            return redirect('login')
+    else:
+        # Render the login form
+        return render(request, 'login.html')
+    </code>
+										</pre>
+
+</p>
+
+{% endblock content %}

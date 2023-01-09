@@ -1,0 +1,10 @@
+.about-container {
+  padding: 0 16px;
+}
+
+.about-container::after, .row::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
